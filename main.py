@@ -113,7 +113,7 @@ def scrape_disasters():
 # ---------------- CHATBOT ----------------
 
 def chatbot_reply(message):
-    message = message.lower()
+    message = message.lower().strip()
 
     if "hello" in message or "hi" in message:
         return "Hello! Welcome to the Disaster Relief Chatbot. How can I help you?"
