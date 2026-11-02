@@ -192,9 +192,7 @@ def chatbot_reply(message):
             return (
                 "For clothing purposes please contact the near by camps orgnanized by government or NGOs. You can also submit your requirement using the Emergency Request page."
             )
-    elif("helpline" in message or
-        "emergency" in message or
-        "contact number" in message or
+    elif("contact number" in message or
         "help number" in message):
 
         return ("""
@@ -213,13 +211,13 @@ def chatbot_reply(message):
         """)
     
 
-    elif "flood safety" in message:
+    elif "water" in message:
         return ("For flood assistance, contact 112 or your district disaster control room at 1077.")
 
-    elif "earthquake safety" in message:
+    elif "floor shaking" in message:
         return ("For earthquake-related emergency assistance, contact 112.")
 
-    elif "fire safety" in message:
+    elif "burning" in message:
         return ("For fire emergencies, call 101 or 112.")
 
     else:
