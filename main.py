@@ -75,43 +75,69 @@ create_database()
 def scrape_disasters():
 
     import requests
-    import xml.etree.ElementTree as ET
+    from bs4 import BeautifulSoup
 
-    url =  "https://news.google.com/search"
+    url = "https://news.google.com/search"
+
+    params = {
+        "q": "disaster OR earthquake OR flood OR cyclone",
+        "hl": "en-IN",
+        "gl": "IN",
+        "ceid": "IN:en"
+    }
+
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
     response = requests.get(
         url,
-        headers={"User-Agent": "Mozilla/5.0"},
+        params=params,
+        headers=headers,
         timeout=20
     )
 
-    print("Status:", response.status_code)
-    print("Content type:", response.headers.get("Content-Type"))
-    print("Response:", repr(response.text[:500]))
-
     response.raise_for_status()
 
-    try:
-        root = ET.fromstring(response.content)
-
-    except ET.ParseError as e:
-        st.error(f"XML Error: {e}")
-        st.write("Website response:")
-        st.code(response.text[:1000])
-        return []
+    soup = BeautifulSoup(
+        response.text,
+        "html.parser"
+    )
 
     results = []
 
-    for item in root.findall(".//item"):
+    for item in soup.find_all("article"):
 
-        title = item.findtext("title")
-        link = item.findtext("link")
+        heading = item.find("h3")
 
-        if title and link:
-            results.append({
-                "Disaster / Report": title.strip(),
-                "Source Link": link.strip()
-            })
+        if heading:
+
+            link_tag = heading.find("a")
+
+            if link_tag:
+
+                title = heading.get_text(strip=True)
+
+                link = link_tag.get("href")
+
+                if link:
+
+                    if link.startswith("./"):
+                        link = (
+                            "https://news.google.com/"
+                            + link[2:]
+                        )
+
+                    elif link.startswith("/"):
+                        link = (
+                            "https://news.google.com"
+                            + link
+                        )
+
+                    results.append({
+                        "Disaster / Report": title,
+                        "Source Link": link
+                    })
 
     return results[:20]
 
