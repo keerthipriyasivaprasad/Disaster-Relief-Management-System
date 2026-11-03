@@ -74,27 +74,14 @@ create_database()
 @st.cache_data(ttl=300)
 def scrape_disasters():
 
-    import requests
-    from bs4 import BeautifulSoup
+    url = "https://reliefweb.int/disasters"
 
-    url = "https://news.google.com/search"
-
-    params = {
-        "q": "disaster OR earthquake OR flood OR cyclone",
-        "hl": "en-IN",
-        "gl": "IN",
-        "ceid": "IN:en"
-    }
-
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
+    headers = {"User-Agent": "Mozilla/5.0"}
 
     response = requests.get(
         url,
-        params=params,
         headers=headers,
-        timeout=20
+        timeout=15
     )
 
     response.raise_for_status()
@@ -106,38 +93,25 @@ def scrape_disasters():
 
     results = []
 
-    for item in soup.find_all("article"):
+    for heading in soup.find_all(["h2", "h3", "h4"]):
 
-        heading = item.find("h3")
+        link = heading.find("a", href=True)
 
-        if heading:
+        if link:
 
-            link_tag = heading.find("a")
+            title = link.get_text(" ", strip=True)
 
-            if link_tag:
+            href = link["href"]
 
-                title = heading.get_text(strip=True)
+            if title:
 
-                link = link_tag.get("href")
+                if href.startswith("/"):
+                    href = "https://reliefweb.int" + href
 
-                if link:
-
-                    if link.startswith("./"):
-                        link = (
-                            "https://news.google.com/"
-                            + link[2:]
-                        )
-
-                    elif link.startswith("/"):
-                        link = (
-                            "https://news.google.com"
-                            + link
-                        )
-
-                    results.append({
-                        "Disaster / Report": title,
-                        "Source Link": link
-                    })
+                results.append({
+                    "Disaster / Report": title,
+                    "Source Link": href
+                })
 
     return results[:20]
 
