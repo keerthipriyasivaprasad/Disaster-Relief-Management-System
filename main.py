@@ -79,31 +79,26 @@ def scrape_disasters():
 
     url = "https://www.gdacs.org/xml/rss.xml"
 
-    headers = {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "application/rss+xml, application/xml"
-    }
-
     response = requests.get(
         url,
-        headers=headers,
+        headers={"User-Agent": "Mozilla/5.0"},
         timeout=20
     )
 
+    print("Status:", response.status_code)
+    print("Content type:", response.headers.get("Content-Type"))
+    print("Response:", repr(response.text[:500]))
+
     response.raise_for_status()
 
-    # Remove invalid XML control characters
-    content = response.content.decode(
-        "utf-8",
-        errors="replace"
-    )
+    try:
+        root = ET.fromstring(response.content)
 
-    content = "".join(
-        char for char in content
-        if char in "\t\n\r" or ord(char) >= 32
-    )
-
-    root = ET.fromstring(content)
+    except ET.ParseError as e:
+        st.error(f"XML Error: {e}")
+        st.write("Website response:")
+        st.code(response.text[:1000])
+        return []
 
     results = []
 
@@ -113,7 +108,6 @@ def scrape_disasters():
         link = item.findtext("link")
 
         if title and link:
-
             results.append({
                 "Disaster / Report": title.strip(),
                 "Source Link": link.strip()
