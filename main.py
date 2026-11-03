@@ -80,7 +80,8 @@ def scrape_disasters():
     url = "https://www.gdacs.org/xml/rss.xml"
 
     headers = {
-        "User-Agent": "Mozilla/5.0"
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/rss+xml, application/xml"
     }
 
     response = requests.get(
@@ -91,7 +92,18 @@ def scrape_disasters():
 
     response.raise_for_status()
 
-    root = ET.fromstring(response.content)
+    # Remove invalid XML control characters
+    content = response.content.decode(
+        "utf-8",
+        errors="replace"
+    )
+
+    content = "".join(
+        char for char in content
+        if char in "\t\n\r" or ord(char) >= 32
+    )
+
+    root = ET.fromstring(content)
 
     results = []
 
