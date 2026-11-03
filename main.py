@@ -71,47 +71,42 @@ create_database()
 
 
 # ---------------- WEB SCRAPING ----------------
+import streamlit as st
+import requests
+import feedparser
+
 @st.cache_data(ttl=300)
 def scrape_disasters():
 
-    url = "https://reliefweb.int/disasters"
+    url = "https://www.gdacs.org/xml/rss.xml"
 
-    headers = {"User-Agent": "Mozilla/5.0"}
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
     response = requests.get(
         url,
         headers=headers,
-        timeout=15
+        timeout=20
     )
 
     response.raise_for_status()
 
-    soup = BeautifulSoup(
-        response.text,
-        "html.parser"
-    )
+    feed = feedparser.parse(response.content)
 
     results = []
 
-    for heading in soup.find_all(["h2", "h3", "h4"]):
+    for item in feed.entries:
 
-        link = heading.find("a", href=True)
+        title = item.get("title", "")
+        link = item.get("link", "")
 
-        if link:
+        if title and link:
 
-            title = link.get_text(" ", strip=True)
-
-            href = link["href"]
-
-            if title:
-
-                if href.startswith("/"):
-                    href = "https://reliefweb.int" + href
-
-                results.append({
-                    "Disaster / Report": title,
-                    "Source Link": href
-                })
+            results.append({
+                "Disaster / Report": title,
+                "Source Link": link
+            })
 
     return results[:20]
 
