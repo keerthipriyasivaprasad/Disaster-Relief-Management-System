@@ -71,12 +71,11 @@ create_database()
 
 
 # ---------------- WEB SCRAPING ----------------
-import streamlit as st
-import requests
-import feedparser
-
 @st.cache_data(ttl=300)
 def scrape_disasters():
+
+    import requests
+    import xml.etree.ElementTree as ET
 
     url = "https://www.gdacs.org/xml/rss.xml"
 
@@ -92,20 +91,20 @@ def scrape_disasters():
 
     response.raise_for_status()
 
-    feed = feedparser.parse(response.content)
+    root = ET.fromstring(response.content)
 
     results = []
 
-    for item in feed.entries:
+    for item in root.findall(".//item"):
 
-        title = item.get("title", "")
-        link = item.get("link", "")
+        title = item.findtext("title")
+        link = item.findtext("link")
 
         if title and link:
 
             results.append({
-                "Disaster / Report": title,
-                "Source Link": link
+                "Disaster / Report": title.strip(),
+                "Source Link": link.strip()
             })
 
     return results[:20]
