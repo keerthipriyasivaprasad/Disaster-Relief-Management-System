@@ -77,7 +77,7 @@ def scrape_disasters():
     import requests
     import xml.etree.ElementTree as ET
 
-    url = "https://www.gdacs.org/xml/rss.xml"
+    url =  "https://news.google.com/search"
 
     response = requests.get(
         url,
